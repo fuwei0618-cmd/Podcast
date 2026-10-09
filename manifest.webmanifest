@@ -1,0 +1,29 @@
+{
+ "name": "不專業音樂電台",
+ "short_name": "Podcast",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#EFEDF2",
+ "theme_color": "#EFEDF2",
+ "lang": "zh-Hant",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

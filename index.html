@@ -1,0 +1,437 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1"><link rel="icon" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Podcast"><meta name="theme-color" content="#EFEDF2"></head><body>
+<title>不專業音樂電台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-hand phone app. Sticky title bar, scrolling list, fixed bottom tab bar; details and edits open in bottom sheets. Studio look: plum ink, "on air" red for what is live. */
+:root{
+  --bg:#EFEDF2; --surface:#FBFAFC; --sunk:#E4E0EA; --ink:#231C2C; --muted:#665E70; --line:#D3CDDB;
+  --accent:#5B2E7A; --accent-ink:#FFFFFF; --accent-soft:#E6DCEF;
+  --air:#C4302B; --air-bg:#F7DEDA; --ok:#2C6E4E; --ok-bg:#DCEEE3;
+  --display:"LXGW WenKai TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",serif;
+  --body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --r:14px; --tabh:64px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15121A; --surface:#1F1A26; --sunk:#0F0C13; --ink:#ECE7F1; --muted:#A39BAE; --line:#352D3F;
+  --accent:#C49BE3; --accent-ink:#1E0F2A; --accent-soft:#33264090;
+  --air:#F2776E; --air-bg:#3D1C1A; --ok:#79C99D; --ok-bg:#183326;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15121A; --surface:#1F1A26; --sunk:#0F0C13; --ink:#ECE7F1; --muted:#A39BAE; --line:#352D3F;
+  --accent:#C49BE3; --accent-ink:#1E0F2A; --accent-soft:#33264090;
+  --air:#F2776E; --air-bg:#3D1C1A; --ok:#79C99D; --ok-bg:#183326;
+  color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:0 calc(var(--tabh) + 32px + env(safe-area-inset-bottom,0px))}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 10px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.top h1{font-family:var(--display);font-weight:700;font-size:24px;margin:0;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.onair{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--air);border:1.5px solid var(--air);border-radius:4px;padding:1px 6px}
+.top .sync{font-size:12px;color:var(--muted)}
+h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance}
+h2{font-size:20px} h3{font-size:16px}
+.sec{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.label{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.muted{color:var(--muted)} .small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14px}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--air);border-color:var(--air)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* summary strip */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.stat b{display:block;font-family:var(--display);font-size:24px;line-height:1.2}
+.stat.live{border-color:var(--air)} .stat.live b{color:var(--air)}
+/* episode list */
+.eps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ep{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.code{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:4px 7px;min-width:58px;text-align:center}
+.code.none{color:var(--muted);background:var(--sunk)}
+.ep-main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.ep-title{font-weight:500;overflow-wrap:anywhere}
+.ep-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.pill{font-size:12px;border-radius:999px;padding:1px 8px;font-weight:500}
+.pill.live{color:var(--air);background:var(--air-bg)} .pill.ok{color:var(--ok);background:var(--ok-bg)}
+.bar{height:5px;border-radius:3px;background:var(--sunk);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--air)}
+.bar.full i{background:var(--ok)}
+/* checklist */
+.grp{display:flex;flex-direction:column;gap:2px}
+.grp h3{display:flex;justify-content:space-between;align-items:baseline;padding-block:6px}
+.step{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;padding:9px 4px;border-top:1px solid var(--line);cursor:pointer}
+.step input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent)}
+.step .t{font-weight:500} .step .d{font-size:13px;color:var(--muted)}
+.step.done .t{color:var(--muted);text-decoration:line-through}
+/* copy blocks */
+.blk{display:flex;flex-direction:column;gap:8px}
+.blk-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.txt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;max-height:220px;overflow:auto;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.txt.open{max-height:none}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:16px;color:var(--muted);text-align:center}
+select.pick{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+/* partners */
+.pt{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:18px;background:var(--accent-soft);color:var(--accent)}
+.cnt{font-family:var(--display);font-size:20px;font-weight:700}
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs nav{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--tabh)}
+.tabs button{background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--muted)}
+.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current="page"]{color:var(--accent);font-weight:700}
+/* sheet */
+.scrim{position:fixed;inset:0;background:#00000066;z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-height:88%;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-in{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 2px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-8px;background:var(--bg);padding-block:6px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form .full{grid-column:1/-1}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f input,.f textarea,.f select{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.f textarea{min-height:90px;resize:vertical}
+.f textarea.big{min-height:46vh}
+.toggle{display:flex;align-items:center;gap:8px;padding-top:22px}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.end{justify-content:flex-end}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;max-width:calc(100% - 32px)}
+@media (max-width:380px){.form{grid-template-columns:1fr}.stats b{font-size:20px}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1><span class="onair">ON AIR</span><span id="ttl">集數</span></h1>
+    <span class="sync" id="sync">連線中…</span>
+  </header>
+  <main id="view"></main>
+</div>
+<div class="tabs"><nav id="tabs" aria-label="分頁"></nav></div>
+<div id="sheetRoot"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(()=>{
+/* ---------- constants ---------- */
+const LS='podcast-app-v1';
+const COLS=['episodes','partners','templates'];
+const TITLES={eps:'集數',make:'製作',copy:'文案',pals:'搭檔'};
+const ICONS={
+  eps:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  make:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/></svg>',
+  pals:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5a5 5 0 0 1 6 5"/></svg>'
+};
+const STEPS=[
+  {g:'錄製前',items:[
+    ['pre1','確認搭檔、時間地點、歌曲、概念',''],
+    ['pre2','準備模板','新人模板、腳本'],
+    ['pre3','設備充電','大 pad、小 pad、手機、MIC'],
+    ['pre4','報備','']]},
+  {g:'錄製中',items:[
+    ['rec1','設備就位','語音備忘錄：小 pad（先測試）・筆記：大 pad・MIC 手持'],
+    ['rec2','手機靜音','']]},
+  {g:'剪輯',items:[
+    ['ed1','前置','上傳 OneDrive・m4a 轉 wav・Audacity 壓縮、響度正規化 -14'],
+    ['ed2','匯入剪映','音樂片頭片尾・剪口播・字幕識別匯出 TXT'],
+    ['ed3','Reels','複製草稿・選片段匯出 SRT 轉繁體・配樂始 1:13、結尾鈴 +5dB、閉幕漸隱 1s・波形、封面放關鍵句'],
+    ['ed4','圖片','1:1 頻道・橫式 YouTube・直式 Reels'],
+    ['ed5','文字','三文體文案（IG/FB、Podcast、Threads）']]},
+  {g:'上架',items:[
+    ['pub0','FirstStory',''],
+    ['pub1','Shorts：YouTube','電腦'],
+    ['pub2','Reels：IG、FB、Threads','手機'],
+    ['pub3','貼文：FB','手機'],
+    ['pub4','Threads：小說式段落','電腦'],
+    ['pub5','YouTube：RSS 上架＋橫圖封面','']]},
+  {g:'存檔',items:[
+    ['arc1','原片','封面（方／橫）・mp3・文字稿'],
+    ['arc2','Reels','封面（直）・mp4'],
+    ['arc3','文案存檔','']]}
+];
+const STEP_IDS=STEPS.flatMap(g=>g.items.map(i=>i[0]));
+const TEXTS=[
+  ['script','搭檔腳本'],['transcript','逐字稿'],['ig','IG／FB 預告文'],['podcast','Podcast 介紹'],
+  ['threads','Threads 段落'],['farm','農場標題'],['reels','Reels 金句'],['questions','互動問題'],['intro','新人介紹'],['note','筆記']
+];
+
+/* ---------- state ---------- */
+const S={episodes:{},partners:{},templates:{}};
+const T={}; // texts cache by episode id
+let db=null, mode='local', tab='eps', filter='all', curEp=null, copyMode='ep', sheet=null;
+
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o||{}));
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function fmtD(s){if(!s)return '';const[y,m,d]=s.split('-').map(Number);if(!d)return s;const w='日一二三四五六'[new Date(y,m-1,d).getDay()];return y+'/'+m+'/'+d+'（'+w+'）'}
+function codeLabel(e){return e.code?('S'+e.season+'E'+e.ep):'未排'}
+function progress(e){const c=e.checks||{};return STEP_IDS.filter(k=>c[k]).length}
+function epList(){return Object.entries(S.episodes).map(([id,v])=>({id,...v})).sort((a,b)=>{
+  const ka=a.code?a.season*1000+a.ep:1e9, kb=b.code?b.season*1000+b.ep:1e9; return kb-ka || (b.ts||0)-(a.ts||0)})}
+function inProgress(){return epList().filter(e=>!e.done)}
+function defaultEp(){const live=inProgress().filter(e=>e.code);return (live[live.length-1]||inProgress()[0]||epList()[0]||{}).id||null}
+function nextCode(){let s=1,m=0;epList().forEach(e=>{if(e.code){if(e.season>s){s=e.season;m=e.ep}else if(e.season===s)m=Math.max(m,e.ep)}});return s+'-'+(m+1)}
+function pid(name){let h=0;for(const ch of name)h=(h*31+ch.codePointAt(0))>>>0;return 'p'+h.toString(36)}
+function partners(){
+  const m={};
+  epList().forEach(e=>{String(e.partner||'').split(/[,，、]/).map(x=>x.trim()).filter(Boolean).forEach(n=>{(m[n]=m[n]||{name:n,eps:[]}).eps.push(e)})});
+  Object.values(S.partners).forEach(p=>{if(p.name&&!m[p.name])m[p.name]={name:p.name,eps:[]}});
+  return Object.values(m).sort((a,b)=>b.eps.length-a.eps.length||a.name.localeCompare(b.name,'zh-Hant'));
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2200)}
+async function copyText(s){try{await navigator.clipboard.writeText(s);toast('已複製')}catch(e){toast('無法自動複製，請長按文字選取')}}
+
+/* ---------- storage ---------- */
+function saveCache(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+function loadCache(){try{const v=JSON.parse(localStorage.getItem(LS)||'null');if(v)COLS.forEach(c=>S[c]=v[c]||{})}catch(e){}}
+const wq={};
+async function write(col,id,v){if(v===null)await db.collection(col).doc(id).delete();else await db.collection(col).doc(id).set(v)}
+function put(col,id,obj){
+  if(col!=='texts'){if(obj===null)delete S[col][id];else S[col][id]=obj;saveCache()}
+  scheduleRender();
+  if(!db){if(col==='texts')toast('目前沒有連上雲端，文案只存在這次畫面');return}
+  const k=col+'/'+id,q=wq[k]||(wq[k]={busy:false,val:undefined});
+  q.val=obj;if(!q.busy)flush(k,col,id);
+}
+async function flush(k,col,id){
+  const q=wq[k];q.busy=true;
+  while(q.val!==undefined){
+    const v=q.val;q.val=undefined;
+    try{await write(col,id,v)}
+    catch(e){try{await new Promise(r=>setTimeout(r,600+Math.random()*600));await write(col,id,v)}catch(e2){toast('沒有存到雲端（'+(e2.code||'連線問題')+'），請再試一次')}}
+  }
+  q.busy=false;
+}
+async function loadTexts(id){
+  if(T[id]||!db)return T[id]||{};
+  try{const s=await db.collection('texts').doc(id).get();T[id]=s.exists?clone(s.data()):{}}catch(e){T[id]={}}
+  scheduleRender();return T[id];
+}
+
+/* ---------- render ---------- */
+let rq=false;
+function scheduleRender(){if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;render()})}
+function render(){
+  $('#ttl').textContent=TITLES[tab];
+  $('#sync').textContent=mode==='cloud'?'已同步':mode==='local'?'離線：存在這台裝置':'連線中…';
+  $('#tabs').innerHTML=Object.keys(TITLES).map(k=>`<button data-tab="${k}" ${k===tab?'aria-current="page"':''}>${ICONS[k]}<span>${TITLES[k]}</span></button>`).join('');
+  const v=$('#view');
+  v.innerHTML=tab==='eps'?vEps():tab==='make'?vMake():tab==='copy'?vCopy():vPals();
+  renderSheet();
+}
+function emptyState(msg){return `<div class="empty">${msg}</div>`}
+function epRow(e){
+  const p=progress(e),n=STEP_IDS.length;
+  return `<li><button class="ep" data-open-ep="${e.id}">
+    <span class="code ${e.code?'':'none'}">${codeLabel(e)}</span>
+    <span class="ep-main">
+      <span class="ep-title">${esc(e.title||'未命名')}</span>
+      <span class="ep-meta">${e.partner?`<span>feat. ${esc(e.partner)}</span>`:''}${e.published?`<span class="num">${fmtD(e.published)}</span>`:''}${e.done?'<span class="pill ok">已上架</span>':'<span class="pill live">製作中</span>'}</span>
+      ${e.done?'':`<span class="bar"><i style="width:${Math.round(p/n*100)}%"></i></span><span class="small muted num">${p}/${n} 步</span>`}
+    </span></button></li>`;
+}
+function vEps(){
+  const all=epList();
+  if(!all.length)return emptyState(mode==='cloud'?'還沒有集數。按「新增一集」開始第一集。':'正在載入集數…')+`<div class="row end" style="margin-top:12px"><button class="btn pri" data-new-ep>新增一集</button></div>`;
+  const done=all.filter(e=>e.done).length, live=all.length-done;
+  const list=filter==='all'?all:filter==='live'?all.filter(e=>!e.done):all.filter(e=>e.done);
+  return `<section class="sec">
+    <div class="stats">
+      <div class="stat"><span class="label">已上架</span><b class="num">${done}</b></div>
+      <div class="stat live"><span class="label">製作中</span><b class="num">${live}</b></div>
+      <div class="stat"><span class="label">下一集</span><b class="num">${nextCode()}</b></div>
+    </div></section>
+  <section class="sec">
+    <div class="sec-head"><div class="chips">
+      ${[['all','全部'],['live','製作中'],['done','已上架']].map(([k,l])=>`<button class="chip" data-filter="${k}" aria-pressed="${filter===k}">${l}</button>`).join('')}
+    </div><button class="btn pri" data-new-ep>新增一集</button></div>
+    <ul class="eps">${list.map(epRow).join('')||'<li>'+emptyState('這個分類沒有集數')+'</li>'}</ul>
+  </section>`;
+}
+function epPicker(id,attr){
+  return `<select class="pick" id="pick-${attr}" data-pick="${attr}" aria-label="選擇集數">${epList().map(e=>`<option value="${e.id}" ${e.id===id?'selected':''}>${codeLabel(e)}・${esc(e.title||'未命名')}${e.done?'':'（製作中）'}</option>`).join('')}</select>`;
+}
+function vMake(){
+  if(!epList().length)return emptyState('先到「集數」新增一集，這裡會出現它的製作清單。');
+  if(!curEp||!S.episodes[curEp])curEp=defaultEp();
+  const e={id:curEp,...S.episodes[curEp]}, c=e.checks||{}, p=progress(e), n=STEP_IDS.length;
+  return `<section class="sec">${epPicker(curEp,'make')}
+    <div class="panel"><div class="sec-head"><h2>${esc(e.title||'未命名')}</h2>${e.done?'<span class="pill ok">已上架</span>':'<span class="pill live">製作中</span>'}</div>
+    <div class="bar ${p===n?'full':''}"><i style="width:${Math.round(p/n*100)}%"></i></div>
+    <div class="row" style="justify-content:space-between;margin-top:6px"><span class="small muted num">完成 ${p}/${n} 步</span>
+    ${p===n&&!e.done?'<button class="btn pri" data-mark-done>標記為已上架</button>':''}</div></div></section>
+    ${STEPS.map(g=>{const d=g.items.filter(i=>c[i[0]]).length;return `<section class="sec panel grp"><h3>${g.g}<span class="small muted num">${d}/${g.items.length}</span></h3>
+      ${g.items.map(([k,t,dd])=>`<label class="step ${c[k]?'done':''}"><input type="checkbox" id="ck-${k}" data-step="${k}" ${c[k]?'checked':''}><span><span class="t">${t}</span>${dd?`<br><span class="d">${dd}</span>`:''}</span></label>`).join('')}
+    </section>`}).join('')}`;
+}
+function vCopy(){
+  const seg=`<div class="chips" style="margin-bottom:12px">${[['ep','每集文案'],['tpl','模板']].map(([k,l])=>`<button class="chip" data-copymode="${k}" aria-pressed="${copyMode===k}">${l}</button>`).join('')}</div>`;
+  if(copyMode==='tpl'){
+    const ts=Object.entries(S.templates).map(([id,v])=>({id,...v})).sort((a,b)=>(a.order||0)-(b.order||0));
+    return seg+(ts.length?ts.map(t=>`<section class="sec panel blk"><div class="blk-head"><div><h3>${esc(t.name)}</h3><div class="small muted">${esc(t.desc||'')}</div></div>
+      <div class="row"><button class="btn" data-edit-tpl="${t.id}">編輯</button><button class="btn pri" data-copy-tpl="${t.id}">複製</button></div></div>
+      <div class="txt">${esc(t.body||'')}</div></section>`).join(''):emptyState('還沒有模板。'))+`<div class="row end"><button class="btn" data-new-tpl>新增模板</button></div>`;
+  }
+  if(!epList().length)return seg+emptyState('先到「集數」新增一集，這裡會放它的腳本和各平台文案。');
+  if(!curEp||!S.episodes[curEp])curEp=defaultEp();
+  const e=S.episodes[curEp], tx=T[curEp];
+  if(!tx){loadTexts(curEp);}
+  const head=`${seg}<section class="sec">${epPicker(curEp,'copy')}
+    ${e.fullTitle?`<div class="panel blk"><div class="blk-head"><span class="label">集數標題</span><button class="btn pri" data-copy-raw="fullTitle">複製</button></div><div>${esc(e.fullTitle)}</div>${e.tags?`<div class="small muted">${esc(e.tags).replace(/\n/g,' ')}</div>`:''}</div>`:''}</section>`;
+  if(!tx)return head+emptyState(db?'正在載入文案…':'連上雲端後才看得到文案。');
+  const has=TEXTS.filter(([k])=>tx[k]), miss=TEXTS.filter(([k])=>!tx[k]);
+  return head+has.map(([k,l])=>`<section class="sec panel blk"><div class="blk-head"><h3>${l}</h3><div class="row"><button class="btn" data-edit-text="${k}">編輯</button><button class="btn pri" data-copy-text="${k}">複製</button></div></div>
+    <div class="txt" data-expand>${esc(tx[k])}</div><button class="btn ghost small" data-more style="align-self:flex-start">展開全文</button></section>`).join('')
+    +(has.length?'':emptyState('這集還沒有文案。'))
+    +`<section class="sec"><span class="label">新增文案</span><div class="chips">${miss.map(([k,l])=>`<button class="chip" data-edit-text="${k}">＋ ${l}</button>`).join('')}</div></section>`;
+}
+function vPals(){
+  const ps=partners();
+  if(!ps.length)return emptyState('集數裡填上搭檔，這裡就會列出每位搭檔上過哪幾集。');
+  return `<section class="sec"><div class="sec-head"><span class="label">${ps.length} 位搭檔・依集數排序</span><button class="btn" data-new-pal>新增搭檔</button></div>
+    ${ps.map(p=>{const last=p.eps.find(e=>e.published);return `<button class="pt" data-open-pal="${esc(p.name)}"><span class="av">${esc([...p.name][0])}</span>
+      <span style="min-width:0"><b>${esc(p.name)}</b><br><span class="small muted">${last?'最近：'+esc(last.title):'還沒有上架的集數'}</span></span>
+      <span class="cnt num">${p.eps.length}<span class="small muted"> 集</span></span></button>`}).join('')}</section>`;
+}
+
+/* ---------- sheets ---------- */
+function openSheet(s){sheet=s;renderSheet();}
+function closeSheet(){sheet=null;renderSheet();}
+function renderSheet(){
+  const r=$('#sheetRoot');
+  if(!sheet){r.innerHTML='';return}
+  if(r.dataset.key===sheet.key&&r.innerHTML)return; // keep inputs while typing
+  r.dataset.key=sheet.key;
+  r.innerHTML=`<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-in"><div class="grab"></div>${sheet.html()}</div></div>`;
+}
+function head(t,extra=''){return `<div class="sheet-head"><h2>${t}</h2><div class="row">${extra}<button class="btn ghost" data-close>關閉</button></div></div>`}
+function epSheet(id){
+  const e=id?S.episodes[id]:{title:'',code:nextCode(),partner:'',published:'',recorded:'',done:false,fullTitle:'',tags:'',note:'',checks:{}};
+  openSheet({key:'ep-'+(id||'new')+Date.now(),html:()=>`${head(id?codeLabel({...e}):'新增一集')}
+    <form class="form" id="epForm" data-id="${id||''}">
+      <label class="f full"><span class="label">歌曲／項目</span><input id="f-title" name="title" value="${esc(e.title)}" placeholder="歌手-歌名" required></label>
+      <label class="f"><span class="label">季-集數</span><input id="f-code" name="code" value="${esc(e.code)}" placeholder="1-26" inputmode="numeric"></label>
+      <label class="f"><span class="label">搭檔</span><input id="f-partner" name="partner" value="${esc(e.partner)}" list="palList" placeholder="多位用逗號分開"></label>
+      <label class="f"><span class="label">錄製日期</span><input id="f-recorded" name="recorded" type="date" value="${esc(e.recorded)}"></label>
+      <label class="f"><span class="label">發布日期</span><input id="f-published" name="published" type="date" value="${esc(e.published)}"></label>
+      <label class="f full"><span class="label">完整標題</span><textarea id="f-fullTitle" name="fullTitle" placeholder="S1E26《歌手-歌名》…_feat.搭檔(ep.026)">${esc(e.fullTitle)}</textarea></label>
+      <label class="f full"><span class="label">Hashtag</span><input id="f-tags" name="tags" value="${esc(e.tags).replace(/\n/g,' ')}" placeholder="#歌手 #歌名"></label>
+      <label class="f full"><span class="label">備註</span><textarea id="f-note" name="note">${esc(e.note)}</textarea></label>
+      <label class="toggle full"><input type="checkbox" id="f-done" name="done" ${e.done?'checked':''}> 已上架</label>
+      <datalist id="palList">${partners().map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>
+      <div class="row full" style="justify-content:space-between">
+        ${id?`<div class="row"><button type="button" class="btn" data-goto="make" data-ep="${id}">製作清單</button><button type="button" class="btn" data-goto="copy" data-ep="${id}">文案</button></div>`:'<span></span>'}
+        <div class="row">${id?`<button type="button" class="btn danger" data-del-ep="${id}">刪除</button>`:''}<button class="btn pri" type="submit">儲存</button></div>
+      </div>
+      <p class="small muted full" id="delAsk" hidden>再按一次「確定刪除」就會移除這一集和它的文案。<button type="button" class="btn danger" data-del-ep-yes="${id}">確定刪除</button></p>
+    </form>`});
+}
+function textSheet(k){
+  const l=(TEXTS.find(t=>t[0]===k)||[k,k])[1], tx=T[curEp]||{};
+  openSheet({key:'tx-'+k+Date.now(),html:()=>`${head(l)}
+    <form class="form" id="txForm" data-k="${k}"><label class="f full"><span class="label">${esc(S.episodes[curEp]?.title||'')}</span><textarea class="big" id="f-text" name="text">${esc(tx[k]||'')}</textarea></label>
+    <div class="row full end"><button class="btn pri" type="submit">儲存</button></div></form>`});
+}
+function tplSheet(id){
+  const t=id?S.templates[id]:{name:'',desc:'',body:'',order:Object.keys(S.templates).length+1};
+  openSheet({key:'tp-'+(id||'new')+Date.now(),html:()=>`${head(id?'編輯模板':'新增模板')}
+    <form class="form" id="tpForm" data-id="${id||''}">
+      <label class="f full"><span class="label">名稱</span><input id="f-tname" name="name" value="${esc(t.name)}" required></label>
+      <label class="f full"><span class="label">用途</span><input id="f-tdesc" name="desc" value="${esc(t.desc)}"></label>
+      <label class="f full"><span class="label">內容</span><textarea class="big" id="f-tbody" name="body">${esc(t.body)}</textarea></label>
+      <div class="row full end">${id?`<button type="button" class="btn danger" data-del-tpl="${id}">刪除</button>`:''}<button class="btn pri" type="submit">儲存</button></div></form>`});
+}
+function palSheet(name){
+  const p=partners().find(x=>x.name===name)||{name:name||'',eps:[]}, info=S.partners[pid(p.name)]||{};
+  openSheet({key:'pl-'+name+Date.now(),html:()=>`${head(name?esc(p.name):'新增搭檔')}
+    <form class="form" id="plForm" data-orig="${esc(name||'')}">
+      ${name?'':`<label class="f full"><span class="label">名字</span><input id="f-pname" name="name" required></label>`}
+      <label class="f full"><span class="label">IG／聯絡方式</span><input id="f-pig" name="ig" value="${esc(info.ig||'')}"></label>
+      <label class="f full"><span class="label">介紹與備註</span><textarea id="f-pnote" name="note" placeholder="身分、怎麼認識、擅長曲風…">${esc(info.note||'')}</textarea></label>
+      <div class="row full end"><button class="btn pri" type="submit">儲存</button></div></form>
+    ${p.eps.length?`<section class="sec"><span class="label">上過的集數</span><ul class="eps">${p.eps.map(epRow).join('')}</ul></section>`:''}`});
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('button,[data-close],.scrim');if(!b)return;
+  const d=b.dataset;
+  if(d.close!==undefined){closeSheet();return}
+  if(d.tab){tab=d.tab;try{localStorage.setItem(LS+'-tab',tab)}catch(_){}window.scrollTo(0,0);render();return}
+  if(d.filter){filter=d.filter;render();return}
+  if(d.copymode){copyMode=d.copymode;render();return}
+  if(d.newEp!==undefined){epSheet(null);return}
+  if(d.openEp){epSheet(d.openEp);return}
+  if(d.goto){curEp=d.ep;tab=d.goto;copyMode='ep';closeSheet();window.scrollTo(0,0);render();return}
+  if(d.delEp){$('#delAsk').hidden=false;return}
+  if(d.delEpYes){const id=d.delEpYes;put('episodes',id,null);put('texts',id,null);delete T[id];if(curEp===id)curEp=null;closeSheet();toast('已刪除');return}
+  if(d.markDone){const e=clone(S.episodes[curEp]);e.done=true;put('episodes',curEp,e);toast('已標記為已上架');return}
+  if(d.copyRaw){copyText(S.episodes[curEp]?.[d.copyRaw]||'');return}
+  if(d.copyText){copyText((T[curEp]||{})[d.copyText]||'');return}
+  if(d.editText){textSheet(d.editText);return}
+  if(d.copyTpl){copyText(S.templates[d.copyTpl]?.body||'');return}
+  if(d.editTpl){tplSheet(d.editTpl);return}
+  if(d.newTpl!==undefined){tplSheet(null);return}
+  if(d.delTpl){put('templates',d.delTpl,null);closeSheet();toast('已刪除模板');return}
+  if(d.openPal){palSheet(d.openPal);return}
+  if(d.newPal!==undefined){palSheet(null);return}
+  if(d.more!==undefined){const t=b.previousElementSibling;t.classList.toggle('open');b.textContent=t.classList.contains('open')?'收合':'展開全文';return}
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target;
+  if(t.dataset.pick){curEp=t.value;render();return}
+  if(t.dataset.step){const e=clone(S.episodes[curEp]);e.checks=e.checks||{};if(t.checked)e.checks[t.dataset.step]=true;else delete e.checks[t.dataset.step];put('episodes',curEp,e);return}
+});
+document.addEventListener('submit',ev=>{
+  ev.preventDefault();const f=ev.target,fd=new FormData(f);
+  if(f.id==='epForm'){
+    const id=f.dataset.id||uid('e'), old=S.episodes[id]||{checks:{},ts:Date.now()};
+    const code=String(fd.get('code')||'').trim(), m=code.match(/^(\d+)\s*-\s*(\d+)$/);
+    const e={...old,title:fd.get('title').trim(),code:m?m[1]+'-'+m[2]:'',season:m?+m[1]:null,ep:m?+m[2]:null,partner:fd.get('partner').trim(),
+      recorded:fd.get('recorded'),published:fd.get('published'),fullTitle:fd.get('fullTitle').trim(),tags:fd.get('tags').trim(),note:fd.get('note'),done:fd.get('done')==='on'};
+    put('episodes',id,e);if(!f.dataset.id){T[id]={};curEp=id}closeSheet();toast('已儲存');return;
+  }
+  if(f.id==='txForm'){const k=f.dataset.k,tx={...(T[curEp]||{})},v=fd.get('text');if(v.trim())tx[k]=v;else delete tx[k];T[curEp]=tx;put('texts',curEp,tx);
+    const e=clone(S.episodes[curEp]);e.hasTexts=Object.keys(tx).sort();put('episodes',curEp,e);closeSheet();toast('已儲存');return}
+  if(f.id==='tpForm'){const id=f.dataset.id||uid('t'),old=S.templates[id]||{order:Object.keys(S.templates).length+1};put('templates',id,{...old,name:fd.get('name').trim(),desc:fd.get('desc').trim(),body:fd.get('body')});closeSheet();toast('已儲存');return}
+  if(f.id==='plForm'){const name=(f.dataset.orig||fd.get('name')||'').trim();if(!name)return;put('partners',pid(name),{name,ig:fd.get('ig').trim(),note:fd.get('note')});closeSheet();toast('已儲存');return}
+});
+
+/* ---------- boot ---------- */
+try{const tb=localStorage.getItem(LS+'-tab');if(tb&&TITLES[tb])tab=tb}catch(_){}
+const hash=(location.hash||'').slice(1);if(TITLES[hash])tab=hash;
+loadCache();render();
+(async()=>{
+  const c=window.claude;
+  if(c&&c.use){try{db=await c.use('db')}catch(e){db=null}}
+  if(!db){mode='local';render();return}
+  const pending=new Set(COLS);
+  COLS.forEach(col=>{
+    db.collection(col).onSnapshot(snap=>{
+      const m={};snap.docs.forEach(d=>{m[d.id]=clone(d.data())});
+      S[col]=m;pending.delete(col);if(!pending.size)mode='cloud';saveCache();scheduleRender();
+    },err=>{mode='local';toast('雲端連線中斷，資料先存在這台裝置');scheduleRender()});
+  });
+})();
+})();
+</script>
+
+<a class="to-origina" href="https://fuwei0618-cmd.github.io/Entry/" aria-label="回到 Origina">↖ Origina</a>
+<style>.to-origina{position:fixed;left:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:9;font:600 12px/1 "Noto Sans TC",system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;color:#2B2724;background:rgba(236,232,225,.88);border:1px solid rgba(43,39,36,.18);border-radius:999px;padding:7px 11px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}</style>
+</body></html>

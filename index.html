@@ -395,6 +395,26 @@ async function importBackup(file){
   const msg=$('#importMsg');const say=t=>{if(msg){msg.hidden=false;msg.textContent=t}};
   let v;try{v=JSON.parse(await file.text())}catch(e){say('這個檔案讀不出來，請確認是 Podcast 備份的 .json 檔。');return}
   if(!v||typeof v.episodes!=='object'){say('這個檔案裡沒有集數資料，請確認選的是 Podcast 備份檔。');return}
+  applyBackup(v);
+}
+// One-tap restore: #restore=<key> decrypts restore.bin published next to the page (AES-GCM; the key only travels in the link).
+let pendingRestore=null;
+async function restoreFromLink(){
+  const m=(location.hash||'').match(/^#restore=([A-Za-z0-9_-]{20,})$/);if(!m)return;
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}
+  try{
+    const raw=Uint8Array.from(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+    const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+    const r=await fetch('restore.bin',{cache:'no-store'});if(!r.ok)throw 0;
+    const buf=new Uint8Array(await r.arrayBuffer());
+    const v=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12))));
+    if(!Object.keys(S.episodes).length){applyBackup(v);return}
+    pendingRestore=v;
+    openSheet({key:'rs'+Date.now(),html:()=>`${head('匯入備份')}<section class="sec panel"><p>這個連結裡有 ${Object.keys(v.episodes||{}).length} 集。匯入會取代這台裝置上現有的 ${Object.keys(S.episodes).length} 集。</p>
+      <div class="row end"><button class="btn" data-close>先不要</button><button class="btn pri" data-restore-yes>匯入</button></div></section>`});
+  }catch(e){toast('這個匯入連結打不開，請改用「備份」選檔案匯入')}
+}
+function applyBackup(v){
   ['episodes','texts','templates','partners'].forEach(c=>{
     const inc=v[c]||{};
     Object.keys(S[c]).forEach(id=>{if(!(id in inc))put(c,id,null)});
@@ -409,6 +429,7 @@ document.addEventListener('click',ev=>{
   const d=b.dataset;
   if(d.close!==undefined){closeSheet();return}
   if(d.backup!==undefined){backupSheet();return}
+  if(d.restoreYes!==undefined){const v=pendingRestore;pendingRestore=null;if(v)applyBackup(v);return}
   if(d.export!==undefined){exportBackup();return}
   if(d.tab){tab=d.tab;try{localStorage.setItem(LS+'-tab',tab)}catch(_){}window.scrollTo(0,0);render();return}
   if(d.filter){filter=d.filter;render();return}
@@ -458,7 +479,7 @@ loadCache();render();
 (async()=>{
   const c=window.claude;
   if(c&&c.use){c.use('downloads').then(x=>{downloads=x}).catch(()=>{});try{db=await c.use('db')}catch(e){db=null}}
-  if(!db){mode='local';render();return}
+  if(!db){mode='local';render();restoreFromLink();return}
   const pending=new Set(COLS);
   COLS.forEach(col=>{
     db.collection(col).onSnapshot(snap=>{

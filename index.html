@@ -171,9 +171,11 @@ const TEXTS=[
 ];
 
 /* ---------- state ---------- */
-const S={episodes:{},partners:{},templates:{}};
-const T={}; // texts cache by episode id
-let db=null, mode='local', tab='eps', filter='all', curEp=null, copyMode='ep', sheet=null;
+const S={episodes:{},partners:{},templates:{},texts:{}};
+const T=S.texts; // texts by episode id (kept on this device too)
+const fetched=new Set();
+const HAS_CLAUDE=!!(window.claude&&window.claude.use);
+let db=null, downloads=null, mode=HAS_CLAUDE?'loading':'local', tab='eps', filter='all', curEp=null, copyMode='ep', sheet=null;
 
 /* ---------- helpers ---------- */
 const $=(s,r=document)=>r.querySelector(s);
@@ -200,13 +202,13 @@ async function copyText(s){try{await navigator.clipboard.writeText(s);toast('已
 
 /* ---------- storage ---------- */
 function saveCache(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
-function loadCache(){try{const v=JSON.parse(localStorage.getItem(LS)||'null');if(v)COLS.forEach(c=>S[c]=v[c]||{})}catch(e){}}
+function loadCache(){try{const v=JSON.parse(localStorage.getItem(LS)||'null');if(v)COLS.concat('texts').forEach(c=>{const o=v[c]||{};Object.keys(S[c]).forEach(k=>delete S[c][k]);Object.assign(S[c],o)})}catch(e){}}
 const wq={};
 async function write(col,id,v){if(v===null)await db.collection(col).doc(id).delete();else await db.collection(col).doc(id).set(v)}
 function put(col,id,obj){
-  if(col!=='texts'){if(obj===null)delete S[col][id];else S[col][id]=obj;saveCache()}
+  if(obj===null)delete S[col][id];else S[col][id]=obj;saveCache();
   scheduleRender();
-  if(!db){if(col==='texts')toast('目前沒有連上雲端，文案只存在這次畫面');return}
+  if(!db)return;
   const k=col+'/'+id,q=wq[k]||(wq[k]={busy:false,val:undefined});
   q.val=obj;if(!q.busy)flush(k,col,id);
 }
@@ -220,8 +222,10 @@ async function flush(k,col,id){
   q.busy=false;
 }
 async function loadTexts(id){
-  if(T[id]||!db)return T[id]||{};
-  try{const s=await db.collection('texts').doc(id).get();T[id]=s.exists?clone(s.data()):{}}catch(e){T[id]={}}
+  if(!db){if(mode==='loading')return T[id]||{};if(!T[id])T[id]={};return T[id]}
+  if(T[id]&&fetched.has(id))return T[id];
+  fetched.add(id);
+  try{const s=await db.collection('texts').doc(id).get();T[id]=s.exists?clone(s.data()):{};saveCache()}catch(e){fetched.delete(id);return T[id]||{}}
   scheduleRender();return T[id];
 }
 
@@ -230,7 +234,7 @@ let rq=false;
 function scheduleRender(){if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;render()})}
 function render(){
   $('#ttl').textContent=TITLES[tab];
-  $('#sync').textContent=mode==='cloud'?'已同步':mode==='local'?'OneDrive 同步：看右下角雲朵':'連線中…';
+  $('#sync').innerHTML=(mode==='cloud'?'已同步':mode==='local'?(HAS_CLAUDE?'離線：存在這台裝置':'OneDrive 同步：看右下角雲朵'):'連線中…')+' ・ <button class="btn ghost small" data-backup style="padding:2px 8px">備份</button>';
   $('#tabs').innerHTML=Object.keys(TITLES).map(k=>`<button data-tab="${k}" ${k===tab?'aria-current="page"':''}>${ICONS[k]}<span>${TITLES[k]}</span></button>`).join('');
   const v=$('#view');
   v.innerHTML=tab==='eps'?vEps():tab==='make'?vMake():tab==='copy'?vCopy():vPals();
@@ -249,7 +253,7 @@ function epRow(e){
 }
 function vEps(){
   const all=epList();
-  if(!all.length)return emptyState(mode==='loading'?'正在載入集數…':'還沒有集數。按「新增一集」開始第一集。')+`<div class="row end" style="margin-top:12px"><button class="btn pri" data-new-ep>新增一集</button></div>`;
+  if(!all.length)return emptyState(mode==='loading'?'正在載入集數…':'這台裝置還沒有集數。按右上角「備份」匯入備份檔，就會出現原本的紀錄；或按「新增一集」從頭開始。')+`<div class="row end" style="margin-top:12px"><button class="btn" data-backup>匯入備份</button><button class="btn pri" data-new-ep>新增一集</button></div>`;
   const done=all.filter(e=>e.done).length, live=all.length-done;
   const list=filter==='all'?all:filter==='live'?all.filter(e=>!e.done):all.filter(e=>e.done);
   return `<section class="sec">
@@ -292,10 +296,10 @@ function vCopy(){
   if(!epList().length)return seg+emptyState('先到「集數」新增一集，這裡會放它的腳本和各平台文案。');
   if(!curEp||!S.episodes[curEp])curEp=defaultEp();
   const e=S.episodes[curEp], tx=T[curEp];
-  if(!tx){loadTexts(curEp);}
+  if(!tx||(db&&!fetched.has(curEp)))loadTexts(curEp);
   const head=`${seg}<section class="sec">${epPicker(curEp,'copy')}
     ${e.fullTitle?`<div class="panel blk"><div class="blk-head"><span class="label">集數標題</span><button class="btn pri" data-copy-raw="fullTitle">複製</button></div><div>${esc(e.fullTitle)}</div>${e.tags?`<div class="small muted">${esc(e.tags).replace(/\n/g,' ')}</div>`:''}</div>`:''}</section>`;
-  if(!tx)return head+emptyState(db?'正在載入文案…':'連上雲端後才看得到文案。');
+  if(!tx)return head+emptyState('正在載入文案…');
   const has=TEXTS.filter(([k])=>tx[k]), miss=TEXTS.filter(([k])=>!tx[k]);
   return head+has.map(([k,l])=>`<section class="sec panel blk"><div class="blk-head"><h3>${l}</h3><div class="row"><button class="btn" data-edit-text="${k}">編輯</button><button class="btn pri" data-copy-text="${k}">複製</button></div></div>
     <div class="txt" data-expand>${esc(tx[k])}</div><button class="btn ghost small" data-more style="align-self:flex-start">展開全文</button></section>`).join('')
@@ -369,11 +373,43 @@ function palSheet(name){
     ${p.eps.length?`<section class="sec"><span class="label">上過的集數</span><ul class="eps">${p.eps.map(epRow).join('')}</ul></section>`:''}`});
 }
 
+function backupSheet(){
+  const n=Object.keys(S.episodes).length;
+  openSheet({key:'bk'+Date.now(),html:()=>`${head('備份')}
+    <section class="sec panel"><h3>匯入備份檔</h3>
+      <p class="small muted">選擇「Podcast備份」開頭的 .json 檔。匯入會用備份檔的內容取代這台裝置上的集數、文案、模板和搭檔。</p>
+      <label class="btn pri" style="align-self:flex-start;cursor:pointer">選擇檔案<input type="file" id="f-import" accept=".json,application/json" hidden></label>
+      <p class="small" id="importMsg" hidden></p></section>
+    <section class="sec panel"><h3>匯出備份檔</h3>
+      <p class="small muted">把目前 ${n} 集和所有文案存成一個檔案，換手機或想留底時用。${db?'會先把每集文案都讀進來，稍等一下。':''}</p>
+      <button class="btn" data-export style="align-self:flex-start">匯出備份</button></section>`});
+}
+async function exportBackup(){
+  if(db){toast('正在整理文案…');for(const id of Object.keys(S.episodes))await loadTexts(id)}
+  const data=JSON.stringify({app:'podcast',version:1,exportedAt:new Date().toISOString(),episodes:S.episodes,texts:S.texts,templates:S.templates,partners:S.partners});
+  const name='Podcast備份-'+new Date().toLocaleDateString('sv-SE')+'.json';
+  if(downloads){try{await downloads.save({filename:name,data});return}catch(e){toast('沒有存下備份檔');return}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}catch(e){toast('這裡沒辦法下載檔案')}
+}
+async function importBackup(file){
+  const msg=$('#importMsg');const say=t=>{if(msg){msg.hidden=false;msg.textContent=t}};
+  let v;try{v=JSON.parse(await file.text())}catch(e){say('這個檔案讀不出來，請確認是 Podcast 備份的 .json 檔。');return}
+  if(!v||typeof v.episodes!=='object'){say('這個檔案裡沒有集數資料，請確認選的是 Podcast 備份檔。');return}
+  ['episodes','texts','templates','partners'].forEach(c=>{
+    const inc=v[c]||{};
+    Object.keys(S[c]).forEach(id=>{if(!(id in inc))put(c,id,null)});
+    Object.entries(inc).forEach(([id,o])=>put(c,id,o));
+  });
+  curEp=null;closeSheet();toast('已匯入 '+Object.keys(v.episodes).length+' 集');render();
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('button,[data-close],.scrim');if(!b)return;
   const d=b.dataset;
   if(d.close!==undefined){closeSheet();return}
+  if(d.backup!==undefined){backupSheet();return}
+  if(d.export!==undefined){exportBackup();return}
   if(d.tab){tab=d.tab;try{localStorage.setItem(LS+'-tab',tab)}catch(_){}window.scrollTo(0,0);render();return}
   if(d.filter){filter=d.filter;render();return}
   if(d.copymode){copyMode=d.copymode;render();return}
@@ -396,6 +432,7 @@ document.addEventListener('click',ev=>{
 });
 document.addEventListener('change',ev=>{
   const t=ev.target;
+  if(t.id==='f-import'&&t.files&&t.files[0]){importBackup(t.files[0]);return}
   if(t.dataset.pick){curEp=t.value;render();return}
   if(t.dataset.step){const e=clone(S.episodes[curEp]);e.checks=e.checks||{};if(t.checked)e.checks[t.dataset.step]=true;else delete e.checks[t.dataset.step];put('episodes',curEp,e);return}
 });
@@ -420,7 +457,7 @@ const hash=(location.hash||'').slice(1);if(TITLES[hash])tab=hash;
 loadCache();render();
 (async()=>{
   const c=window.claude;
-  if(c&&c.use){try{db=await c.use('db')}catch(e){db=null}}
+  if(c&&c.use){c.use('downloads').then(x=>{downloads=x}).catch(()=>{});try{db=await c.use('db')}catch(e){db=null}}
   if(!db){mode='local';render();return}
   const pending=new Set(COLS);
   COLS.forEach(col=>{
@@ -432,7 +469,6 @@ loadCache();render();
 })();
 })();
 </script>
-
 <a class="to-origina" href="https://fuwei0618-cmd.github.io/Entry/map/" aria-label="回到 Origina 地圖">↖ Origina</a><script>if(window.top!==window.self){var _o=document.querySelector(".to-origina");_o&&_o.remove();}</script>
 <style>.to-origina{position:fixed;left:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:9;font:600 12px/1 "Noto Sans TC",system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;color:#2B2724;background:rgba(236,232,225,.88);border:1px solid rgba(43,39,36,.18);border-radius:999px;padding:7px 11px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}</style>
 </body></html>
